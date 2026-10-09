@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ventania Transporte Expresso</title>
+<style>
+body{margin:0;background:#071525;color:white;font-family:Arial,sans-serif}
+header{background:#0b2742;padding:20px;text-align:center}
+h1{color:#20c5ff;font-size:23px}
+main{padding:15px;max-width:700px;margin:auto}
+.card{background:#102b45;padding:16px;border-radius:12px;margin:12px 0}
+input,select,button,textarea{width:100%;padding:12px;margin:6px 0;box-sizing:border-box;border-radius:8px;border:1px solid #31516c}
+input,select,textarea{background:#071a2c;color:white}
+button{background:#087cf0;color:white;font-weight:bold;border:0}
+nav{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+nav button{background:#153c5d}
+.page{display:none}
+.page.active{display:block}
+small{color:#a8c2d8}
+</style>
+</head>
+<body>
+<header>
+<h1>VENTANIA</h1>
+<strong>TRANSPORTE EXPRESSO</strong>
+</header>
+
+<main>
+<section id="login" class="card">
+<h2>Iniciar sessão</h2>
+<input id="usuario" placeholder="Nome de usuário">
+<input id="senha" type="password" placeholder="Senha">
+<select id="perfil">
+<option value="motorista">Motorista</option>
+<option value="admin">Administrador / RH</option>
+</select>
+<button onclick="entrar()">ENTRAR</button>
+<small>Protótipo de demonstração. Não use senhas reais.</small>
+</section>
+
+<section id="sistema" style="display:none">
+<div class="card">
+Bem-vindo, <strong id="nomeUsuario"></strong>
+<button onclick="sair()">SAIR</button>
+</div>
+
+<nav>
+<button onclick="abrir('principal')">Principal</button>
+<button onclick="abrir('motorista')">Motorista</button>
+<button onclick="abrir('fretes')">Fretes</button>
+<button onclick="abrir('registro')">Registro de cargas</button>
+<button onclick="abrir('empresa')">Valor da empresa</button>
+<button onclick="abrir('ranking')">Ranking mensal</button>
+</nav>
+
+<section id="principal" class="page active card">
+<h2>Painel principal</h2>
+<p>Bem-vindo ao sistema de transporte.</p>
+<p>Motoristas cadastrados: <b id="totalMotoristas">0</b></p>
+<p>Fretes disponíveis: <b id="totalFretes">0</b></p>
+<p>Fretes concluídos: <b id="totalConcluidos">0</b></p>
+</section>
+
+<section id="motorista" class="page card">
+<h2>Cadastro do motorista</h2>
+<input id="nome" placeholder="Nome completo">
+<input id="idade" type="number" placeholder="Idade">
+<input id="cpf" placeholder="CPF">
+<input id="telefone" placeholder="Telefone">
+<input id="cnh" placeholder="Número da CNH">
+<select id="categoria">
+<option value="">Categoria da CNH</option>
+<option>C</option><option>D</option><option>E</option>
+<option>AD</option><option>AE</option>
+</select>
+<label>Validade da CNH</label>
+<input id="validade" type="date">
+<input id="rg" placeholder="RG">
+<input id="endereco" placeholder="Endereço">
+<label>Foto da CNH</label>
+<input id="fotoCnh" type="file" accept="image/*">
+<button onclick="cadastrarMotorista()">SALVAR CADASTRO</button>
+<div id="listaMotoristas"></div>
+</section>
+
+<section id="fretes" class="page card">
+<h2>Fretes disponíveis</h2>
+<div id="listaFretes">Nenhum frete cadastrado.</div>
+<h3>Minhas viagens</h3>
+<div id="minhasViagens"></div>
+</section>
+
+<section id="registro" class="page card">
+<h2>Registrar carga</h2>
+<input id="origem" placeholder="Origem">
+<input id="destino" placeholder="Destino">
+<input id="carga" placeholder="Tipo de carga">
+<input id="km" type="number" placeholder="Quilometragem">
+<input id="valor" type="number" step="0.01" placeholder="Valor do frete em R$">
+<button onclick="registrarFrete()">PUBLICAR FRETE</button>
+<div id="historico"></div>
+</section>
+
+<section id="empresa" class="page card">
+<h2>Resumo da empresa</h2>
+<p>Valor total dos fretes: <b id="valorTotal">R$ 0,00</b></p>
+<p>Valor dos fretes concluídos: <b id="valorConcluido">R$ 0,00</b></p>
+</section>
+
+<section id="ranking" class="page card">
+<h2>Ranking mensal</h2>
+<div id="listaRanking"></div>
+</section>
+</section>
+</main>
+
+<script>
+const chave="ventania_transporte_html";
+let dados={motoristas:[],fretes:[],viagens:[]};
+try{
+ dados=JSON.parse(localStorage.getItem(chave))||dados;
+}catch(e){}
+let usuarioAtual="",perfilAtual="";
+
+function salvar(){
+ localStorage.setItem(chave,JSON.stringify(dados));
+ atualizar();
+}
+
+function entrar(){
+ usuarioAtual=document.getElementById("usuario").value.trim();
+ perfilAtual=document.getElementById("perfil").value;
+ const senha=document.getElementById("senha").value;
+ if(!usuarioAtual||!senha){
+  alert("Digite o usuário e a senha.");
+  return;
+ }
+ document.getElementById("login").style.display="none";
+ document.getElementById("sistema").style.display="block";
+ document.getElementById("nomeUsuario").textContent=usuarioAtual;
+ abrir("principal");
+ atualizar();
+}
+
+function sair(){
+ usuarioAtual="";
+ document.getElementById("login").style.display="block";
+ document.getElementById("sistema").style.display="none";
+}
+
+function abrir(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ atualizar();
+}
+
+function cadastrarMotorista(){
+ const nome=document.getElementById("nome").value.trim();
+ const idade=Number(document.getElementById("idade").value);
+ const cpf=document.getElementById("cpf").value.trim();
+ const cnh=document.getElementById("cnh").value.trim();
+ const categoria=document.getElementById("categoria").value;
+ const validade=document.getElementById("validade").value;
+
+ if(!nome||!idade||!cpf||!cnh||!categoria||!validade){
+  alert("Preencha nome, idade, CPF e os dados obrigatórios da CNH.");
+  return;
+ }
+
+ if(dados.motoristas.some(m=>m.cnh===cnh)){
+  alert("Esta CNH já está cadastrada.");
+  return;
+ }
+
+ dados.motoristas.push({
+  id:Date.now(),nome,idade,cpf,cnh,categoria,validade,
+  telefone:document.getElementById("telefone").value,
+  rg:document.getElementById("rg").value,
+  endereco:document.getElementById("endereco").value,
+  aprovado:false
+ });
+
+ salvar();
+ alert("Cadastro salvo. O RH precisa conferir e aprovar a documentação.");
+}
+
+function aprovarMotorista(id){
+ if(perfilAtual!=="admin"){
+  alert("Somente o RH pode aprovar o motorista.");
+  return;
+ }
+ const m=dados.motoristas.find(x=>x.id===id);
+ if(m){m.aprovado=!m.aprovado;salvar();}
+}
+
+function registrarFrete(){
+ if(perfilAtual!=="admin"){
+  alert("Somente o administrador pode publicar cargas.");
+  return;
+ }
+
+ const origem=document.getElementById("origem").value.trim();
+ const destino=document.getElementById("destino").value.trim();
+ const carga=document.getElementById("carga").value.trim();
+ const km=Number(document.getElementById("km").value);
+ const valor=Number(document.getElementById("valor").value);
+
+ if(!origem||!destino||!carga||km<=0||valor<0){
+  alert("Preencha origem, destino, carga, km e valor.");
+  return;
+ }
+
+ dados.fretes.push({
+  id:Date.now(),origem,destino,carga,km,valor,
+  status:"disponivel",motorista:null
+ });
+ salvar();
+ alert("Frete publicado.");
+}
+
+function pegarFrete(id){
+ const f=dados.fretes.find(x=>x.id===id);
+ if(!f||f.status!=="disponivel")return;
+
+ let m;
+ if(perfilAtual==="motorista"){
+  m=dados.motoristas.find(x=>
+   x.nome.toLowerCase()===usuarioAtual.toLowerCase()
+  );
+ }else{
+  const nomes=dados.motoristas.map((x,i)=>
+   `${i+1}. ${x.nome} (${x.aprovado?"Aprovado":"Pendente"})`
+  ).join("\n");
+  const n=Number(prompt("Escolha o número do motorista:\n"+nomes));
+  m=dados.motoristas[n-1];
+ }
+
+ if(!m){alert("Cadastre o motorista com o mesmo nome do login.");return;}
+ if(!m.aprovado){alert("O RH precisa aprovar a documentação antes de liberar os fretes.");return;}
+
+ f.status="em andamento";
+ f.motorista=m.id;
+ dados.viagens.push({
+  id:Date.now(),freteId:f.id,motoristaId:m.id,
+  status:"em andamento",mes:new Date().toISOString().slice(0,7)
+ });
+ salvar();
+}
+
+function concluirFrete(id){
+ const viagem=dados.viagens.find(v=>v.id===id);
+ if(!viagem)return;
+ const foto=document.createElement("input");
+ foto.type="file";
+ foto.accept="image/*";
+ foto.onchange=()=>{
+  if(!foto.files.length)return;
+  viagem.status="concluido";
+  viagem.mes=new Date().toISOString().slice(0,7);
+  viagem.foto=foto.files[0].name;
+  const f=dados.fretes.find(x=>x.id===viagem.freteId);
+  if(f)f.status="concluido";
+  salvar();
+  alert("Frete concluído. Foto selecionada: "+viagem.foto+
+  ". Nesta versão a imagem não é enviada para um servidor.");
+ };
+ foto.click();
+}
+
+function atualizar(){
+ if(!document.getElementById("sistema")||
+ document.getElementById("sistema").style.display==="none")return;
+
+ totalMotoristas.textContent=dados.motoristas.length;
+ totalFretes.textContent=dados.fretes.filter(f=>f.status==="disponivel").length;
+ totalConcluidos.textContent=dados.fretes.filter(f=>f.status==="concluido").length;
+
+ listaMotoristas.innerHTML=dados.motoristas.map(m=>`
+ <div class="card">
+ <b>${m.nome}</b> — ${m.idade} anos<br>
+ CNH: ${m.cnh} (${m.categoria})<br>
+ Validade: ${m.validade}<br>
+ Status: ${m.aprovado?"Aprovado":"Pendente RH"}<br>
+ ${perfilAtual==="admin"?`<button onclick="aprovarMotorista(${m.id})">${m.aprovado?"Retirar aprovação":"Aprovar documentação"}</button>`:""}
+ </div>`).join("")||"Nenhum motorista cadastrado.";
+
+ listaFretes.innerHTML=dados.fretes.filter(f=>f.status==="disponivel").map(f=>`
+ <div class="card">
+ <b>${f.origem} → ${f.destino}</b><br>
+ Carga: ${f.carga}<br>Distância: ${f.km} km<br>
+ Valor: R$ ${f.valor.toFixed(2)}<br>
+ <button onclick="pegarFrete(${f.id})">ESCOLHER FRETE</button>
+ </div>`).join("")||"Nenhum frete disponível.";
+
+ minhasViagens.innerHTML=dados.viagens.filter(v=>{
+  const m=dados.motoristas.find(x=>x.id===v.motoristaId);
+  return perfilAtual==="admin"||(m&&m.nome.toLowerCase()===usuarioAtual.toLowerCase());
+ }).map(v=>{
+  const f=dados.fretes.find(x=>x.id===v.freteId);
+  const m=dados.motoristas.find(x=>x.id===v.motoristaId);
+  return `<div class="card"><b>${f?.origem||""} → ${f?.destino||""}</b><br>
+  Motorista: ${m?.nome||""}<br>Status: ${v.status}<br>
+  ${v.status==="em andamento"?`<button onclick="concluirFrete(${v.id})">ENVIAR FOTO E CONCLUIR</button>`:"Foto: "+(v.foto||"—")}</div>`;
+ }).join("")||"Nenhuma viagem iniciada.";
+
+ historico.innerHTML=dados.fretes.map(f=>`
+ <p>${f.origem} → ${f.destino} · ${f.carga} · ${f.status}</p>`).join("");
+
+ const total=dados.fretes.reduce((s,f)=>s+f.valor,0);
+ const concluido=dados.fretes.filter(f=>f.status==="concluido").reduce((s,f)=>s+f.valor,0);
+ valorTotal.textContent=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+ valorConcluido.textContent=concluido.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+ const mes=new Date().toISOString().slice(0,7);
+ const rank=dados.motoristas.map(m=>({
+  nome:m.nome,
+  pontos:dados.viagens.filter(v=>v.motoristaId===m.id&&v.status==="concluido"&&v.mes===mes).length
+ })).sort((a,b)=>b.pontos-a.pontos);
+ listaRanking.innerHTML=rank.map((r,i)=>`<p>${i+1}º — ${r.nome}: ${r.pontos} fretes concluídos</p>`).join("")||"Sem pontuação neste mês.";
+}
+atualizar();
+</script>
+</body>
+</html>
+
+
