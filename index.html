@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102c27">
+<title>Ventania Transporte Expresso</title>
+<style>
+:root{--green:#102c27;--lime:#d7f36a;--bg:#f3f6f2;--ink:#17231f;--muted:#68766f;--line:#dbe3dc;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+header{background:var(--green);color:white;padding:20px 16px 16px}header .brand{display:flex;align-items:center;gap:12px} .mark{background:var(--lime);color:var(--green);font-size:26px;font-weight:900;width:52px;height:52px;border-radius:14px;display:grid;place-items:center}h1{font-size:20px;margin:0;letter-spacing:.5px}header p{margin:4px 0 0;color:#d8e5df;font-size:12px}.wrap{max-width:850px;margin:auto;padding:14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.stat{background:#24443d;padding:12px;border-radius:12px}.stat small{display:block;color:#d1ddd8;font-size:11px}.stat strong{display:block;font-size:24px;margin-top:3px}.nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.nav button{border:1px solid var(--line);background:white;border-radius:12px;padding:11px 5px;font-weight:650;color:#33483e}.nav button.active{background:#e7f1dd;border-color:#5b815f;color:#214c32}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}.panel h2{font-size:18px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.card{border:1px solid var(--line);border-radius:13px;padding:13px;margin:10px 0}.route{font-weight:750;font-size:15px}.meta{display:flex;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:12px;margin:8px 0}.price{font-weight:850;color:#2e7547;font-size:20px}.tag{display:inline-block;padding:4px 8px;border-radius:99px;background:#e8f2e4;color:#2b6a3b;font-size:11px;font-weight:700}.tag.pending{background:#fff1cf;color:#8a5c00}.tag.trip{background:#e4edff;color:#315b9a}label{display:block;font-size:12px;font-weight:700;margin:12px 0 5px}input,select{width:100%;border:1px solid #cbd6cd;border-radius:10px;padding:12px;font:inherit;background:white}button.primary{background:var(--green);color:white;border:0;border-radius:10px;padding:12px 14px;font:inherit;font-weight:750;cursor:pointer;width:100%;margin-top:10px}button.secondary{background:white;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-weight:650;cursor:pointer}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.hidden{display:none!important}.notice{padding:11px;border-radius:10px;background:#eef4e9;font-size:13px;margin:10px 0}.footer{text-align:center;color:var(--muted);font-size:11px;padding:20px 8px}.warning{background:#fff5db;border:1px solid #ead49a;border-radius:12px;padding:12px;font-size:12px;line-height:1.45}.queue-num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#e5f0d9;font-weight:800}
+</style>
+</head>
+<body>
+<header><div class="wrap" style="padding:0"><div class="brand"><div class="mark">V</div><div><h1>VENTANIA</h1><div style="font-size:12px;font-weight:750;color:var(--lime);letter-spacing:1px">TRANSPORTE EXPRESSO</div><p>Gestão de fretes, motoristas e viagens</p></div></div>
+<div class="stats"><div class="stat"><small>Cargas abertas</small><strong id="statLoads">0</strong></div><div class="stat"><small>Motoristas</small><strong id="statDrivers">0</strong></div><div class="stat"><small>Na fila</small><strong id="statQueue">0</strong></div></div></div></header>
+<main class="wrap">
+<div class="nav" id="nav">
+<button class="active" data-page="dashboard">Painel</button><button data-page="loads">Fretes</button><button data-page="queue">Fila</button><button data-page="drivers">Motoristas</button><button data-page="register">Cadastro</button><button data-page="admin">RH / Admin</button>
+</div>
+<div id="notice" class="notice hidden"></div>
+<section id="dashboard" class="page panel"><h2>Painel de operações</h2><p class="muted">Acompanhe os fretes e a situação da equipe.</p><div id="summary"></div><button class="primary" onclick="showPage('loads')">Ver fretes disponíveis</button><button class="secondary" style="width:100%;margin-top:8px" onclick="showPage('queue')">Consultar fila</button></section>
+<section id="loads" class="page panel hidden"><h2>Painel de fretes</h2><p class="muted">Os fretes abaixo são dados de demonstração.</p><div id="loadList"></div><h3 style="font-size:15px">Cadastrar novo frete (demonstração)</h3><form id="loadForm"><label>Origem</label><input id="origin" required placeholder="Ex.: Santos, SP"><label>Destino</label><input id="destination" required placeholder="Ex.: Campinas, SP"><label>Tipo de carga</label><input id="cargo" required placeholder="Ex.: Grãos a granel"><label>Quilometragem (km)</label><input id="km" type="number" min="1" required><label>Valor do frete (R$)</label><input id="value" type="number" min="0" step=".01" required><button class="primary">Publicar frete neste dispositivo</button></form></section>
+<section id="queue" class="page panel hidden"><h2>Fila de atendimento</h2><p class="muted">O primeiro motorista tem prioridade no fluxo demonstrativo.</p><div id="queueList"></div><label>Motorista</label><select id="queueDriver"></select><button class="primary" id="joinQueue">Entrar no final da fila</button><div id="tripList"></div></section>
+<section id="drivers" class="page panel hidden"><h2>Equipe de motoristas</h2><div id="driverList"></div></section>
+<section id="register" class="page panel hidden"><h2>Cadastro de motorista</h2><p class="muted">Demonstração local. Não envie documentos reais nesta versão.</p><form id="driverForm"><label>Nome completo</label><input id="driverName" required placeholder="Nome do motorista"><label>Registro da CNH</label><input id="cnh" required placeholder="Número de registro"><label>Categoria da CNH</label><select id="category"><option>B</option><option>C</option><option>D</option><option selected>E</option></select><button class="primary">Criar cadastro de demonstração</button></form></section>
+<section id="admin" class="page panel hidden"><h2>RH / Administração</h2><div class="warning"><b>Importante:</b> esta versão é somente um protótipo local. Ainda não há login seguro, aprovação real de contas, banco de dados compartilhado nem validação de CNH. Não use para operações reais ou dados pessoais.</div><div class="card"><b>Administrador planejado</b><div style="margin-top:6px">ISAQUE VENTANIA</div><div class="muted">isaquefreitas35@gmail.com</div></div><h3 style="font-size:15px">Próximas funções de produção</h3><ul class="muted"><li>Login com confirmação de e-mail e recuperação de senha</li><li>Aprovação de cadastros pelo administrador</li><li>Banco online compartilhado e regras de segurança</li><li>Fila transacional para impedir duas reservas da mesma carga</li><li>Histórico de viagens e documentos com acesso restrito</li></ul></section>
+<div class="warning">Protótipo para avaliar telas e fluxo. Os dados ficam somente neste navegador e podem ser apagados. Não é um APK publicado nem um sistema multiusuário.</div>
+<div class="footer">VENTANIA TRANSPORTE EXPRESSO · PROTÓTIPO DE INTERFACE</div>
+</main>
+<script>
+const demoDrivers=[
+ {id:1,name:"João Silva",cnh:"DEMO-001",category:"E",status:"Na fila"},
+ {id:2,name:"Carlos Souza",cnh:"DEMO-002",category:"E",status:"Disponível"}
+];
+const demoLoads=[
+ {id:101,origin:"Santos, SP",destination:"Campinas, SP",cargo:"Carga geral",km:180,value:1800,status:"Disponível",driver:""},
+ {id:102,origin:"Ribeirão Preto, SP",destination:"Curitiba, PR",cargo:"Grãos a granel",km:520,value:4200,status:"Disponível",driver:""},
+ {id:103,origin:"São Paulo, SP",destination:"Uberlândia, MG",cargo:"Alimentos",km:590,value:4800,status:"Disponível",driver:""}
+];
+let drivers=JSON.parse(localStorage.getItem("vt_drivers")||"null")||demoDrivers;
+let loads=JSON.parse(localStorage.getItem("vt_loads")||"null")||demoLoads;
+let queue=JSON.parse(localStorage.getItem("vt_queue")||"null")||["João Silva"];
+function save(){localStorage.setItem("vt_drivers",JSON.stringify(drivers));localStorage.setItem("vt_loads",JSON.stringify(loads));localStorage.setItem("vt_queue",JSON.stringify(queue));render()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function money(v){return Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function note(s){const n=document.getElementById("notice");n.textContent=s;n.classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"})}
+function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==p));document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.page===p))}
+document.querySelectorAll("#nav button").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+function render(){
+document.getElementById("statLoads").textContent=loads.filter(x=>x.status==="Disponível").length;
+document.getElementById("statDrivers").textContent=drivers.length;document.getElementById("statQueue").textContent=queue.length;
+document.getElementById("summary").innerHTML=`<div class="card"><div class="row"><span>Fretes disponíveis</span><b>${loads.filter(x=>x.status==="Disponível").length}</b></div></div><div class="card"><div class="row"><span>Viagens em andamento</span><b>${loads.filter(x=>x.status==="Em viagem").length}</b></div></div><div class="card"><div class="row"><span>Motoristas na fila</span><b>${queue.length}</b></div></div>`;
+document.getElementById("loadList").innerHTML=loads.filter(x=>x.status==="Disponível").map(x=>`<div class="card"><div class="row"><span class="tag">Disponível</span><span class="muted">Frete #${x.id}</span></div><p class="route">${esc(x.origin)} → ${esc(x.destination)}</p><div class="meta"><span>${esc(x.cargo)}</span><span>${x.km} km</span></div><div class="row"><span class="price">${money(x.value)}</span><button class="secondary" onclick="takeLoad(${x.id})">Pegar carga</button></div></div>`).join("")||'<p class="muted">Não há cargas abertas.</p>';
+document.getElementById("driverList").innerHTML=drivers.map(d=>`<div class="card"><div class="row"><div><b>${esc(d.name)}</b><div class="muted">CNH ${esc(d.cnh)} · Categoria ${esc(d.category)}</div></div><span class="tag ${d.status==='Em viagem'?'trip':''}">${esc(d.status)}</span></div></div>`).join("");
+document.getElementById("queueList").innerHTML=queue.map((n,i)=>`<div class="card row"><div class="queue-num">${i+1}º</div><div style="flex:1"><b>${esc(n)}</b><div class="muted">${i===0?"Próximo na fila":"Aguardando"}</div></div>${i===0?'<span class="tag">Sua vez</span>':""}</div>`).join("")||'<p class="muted">Fila vazia.</p>';
+document.getElementById("queueDriver").innerHTML=drivers.map(d=>`<option value="${esc(d.name)}">${esc(d.name)} — ${esc(d.status)}</option>`).join("");
+document.getElementById("tripList").innerHTML='<h3 style="font-size:15px">Viagens em andamento</h3>'+loads.filter(x=>x.status==="Em viagem").map(x=>`<div class="card"><b>${esc(x.origin)} → ${esc(x.destination)}</b><div class="muted">Motorista: ${esc(x.driver)}</div><button class="primary" onclick="finishLoad(${x.id})">Finalizar viagem (demonstração)</button></div>`).join("");
+}
+function takeLoad(id){const l=loads.find(x=>x.id===id);if(!l||l.status!=="Disponível")return note("Esta carga não está mais disponível.");const first=queue[0];if(first&&first!==drivers.find(d=>d.name===first)?.name)return note("Aguarde a sua vez.");if(first){l.driver=first;queue.shift()}else{l.driver=drivers[0]?.name||"Motorista de demonstração"}l.status="Em viagem";const d=drivers.find(x=>x.name===l.driver);if(d)d.status="Em viagem";save();note("Carga atribuída no protótipo a "+l.driver+".")}
+function finishLoad(id){const l=loads.find(x=>x.id===id);if(!l)return;l.status="Concluída";const d=drivers.find(x=>x.name===l.driver);if(d)d.status="Disponível";save();note("Viagem finalizada. O motorista pode entrar novamente na fila.")}
+document.getElementById("loadForm").addEventListener("submit",e=>{e.preventDefault();loads.push({id:Date.now(),origin:origin.value.trim(),destination:destination.value.trim(),cargo:cargo.value.trim(),km:Number(km.value),value:Number(value.value),status:"Disponível",driver:""});e.target.reset();save();note("Frete adicionado neste dispositivo.")});
+document.getElementById("driverForm").addEventListener("submit",e=>{e.preventDefault();if(drivers.some(d=>d.cnh===cnh.value.trim()))return note("Já existe um cadastro com esse registro.");drivers.push({id:Date.now(),name:driverName.value.trim(),cnh:cnh.value.trim(),category:category.value,status:"Pendente"});e.target.reset();save();note("Cadastro de demonstração criado. Aprovação real exige backend seguro.");showPage("drivers")});
+document.getElementById("joinQueue").addEventListener("click",()=>{const name=document.getElementById("queueDriver").value;if(!name)return note("Cadastre um motorista primeiro.");const d=drivers.find(x=>x.name===name);if(d?.status==="Em viagem")return note("Finalize a viagem antes de entrar na fila.");if(queue.includes(name))return note("Este motorista já está na fila.");queue.push(name);if(d)d.status="Na fila";save();note(name+" entrou no final da fila (somente demonstração).")});
+render();
+</script>
+</body>
+</html>
